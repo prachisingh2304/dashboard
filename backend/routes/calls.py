@@ -2,6 +2,7 @@ from flask import Blueprint, jsonify, request
 from config.sqlserver import get_connection
 from datetime import datetime, timedelta
 import logging
+import traceback
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
@@ -20,25 +21,27 @@ def get_calls():
             date_threshold = datetime.utcnow() - timedelta(days=days)
             query = """
                 SELECT c.call_id, c.agent, c.duration, c.phone, c.connected_status,
-                       c.call_back_status, c.date_time, o.full_name
+                       c.call_back_status, c.date_time
                 FROM calls c
-                LEFT JOIN onboarding o ON c.agent = o.agent
-                WHERE c.date_time >= %s
+                LEFT JOIN agents o ON c.agent = o.agent
+                WHERE c.date_time >= ?
             """
             cursor.execute(query, (date_threshold,))
             logger.debug(f"Days filter: {days}, Date threshold: {date_threshold}")
         else:
             query = """
                 SELECT c.call_id, c.agent, c.duration, c.phone, c.connected_status,
-                       c.call_back_status, c.date_time, o.full_name
+                       c.call_back_status, c.date_time
                 FROM calls c
-                LEFT JOIN onboarding o ON c.agent = o.agent
+                LEFT JOIN agents o ON c.agent = o.agent
             """
             cursor.execute(query)
-        
-        data = cursor.fetchall()  # Results are already dictionaries
-        data = [{**row, "full_name": row.get("full_name", "")} for row in data]
-        
+
+        # Fetch column names and convert rows to list of dicts
+        columns = [column[0] for column in cursor.description]
+        rows = cursor.fetchall()
+        data = [dict(zip(columns, row)) for row in rows]
+
         logger.debug(f"Query returned {len(data)} calls")
         conn.close()
         
@@ -48,5 +51,6 @@ def get_calls():
         
         return jsonify(data)
     except Exception as e:
-        logger.error(f"Error fetching calls: {str(e)}")
+        logger.error("Error fetching calls")
+        logger.error(traceback.format_exc())
         return jsonify({"error": f"Failed to fetch calls: {str(e)}"}), 500

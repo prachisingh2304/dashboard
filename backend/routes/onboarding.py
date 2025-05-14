@@ -8,7 +8,7 @@ onboarding_bp = Blueprint('onboarding', __name__)
 
 
 
-@onboarding_bp.route('/onboarding/users', methods=['GET'])
+@onboarding_bp.route('/onboarding', methods=['GET'])
 def get_onboarding_users():
     try:
         conn = get_connection()

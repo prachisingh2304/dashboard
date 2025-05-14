@@ -29,7 +29,9 @@ const customColumnLabels = {
     agent_status: 'Status',
     key_assigned: 'Assigned Key',
     assigned_date: 'Assigned Date',
-    expiry_date: 'Expiry Date'
+    expiry_date: 'Expiry Date',
+    call_back_status:'Call Back Status',
+    duration:'Duration'
 };
 
 // Define custom column order per table (if desired)

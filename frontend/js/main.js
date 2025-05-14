@@ -39,12 +39,11 @@ async function loadTableData() {
         let json;
 
         if (currentTable === "calls" && daysFilter !== 0) {
-            url += `?days=${daysFilter}`;  // ✅ Only add query param
+            url += `?days=${daysFilter}`;
             response = await fetch(url);
         } else if (currentTable === "calls") {
-            response = await fetch(url);  // ✅ Just use /api/calls
+            response = await fetch(url);
         } else if (currentTable === "onboarding") {
-            url += `/users`;
             response = await fetch(url);
         } else if (currentTable === "key_assignment") {
             response = await fetch(url, {
@@ -54,7 +53,7 @@ async function loadTableData() {
                 }
             });
         } else {
-            response = await fetch(url); // Default GET
+            response = await fetch(url);
         }
 
         if (!response.ok) {
@@ -63,22 +62,24 @@ async function loadTableData() {
         }
 
         json = await response.json();
-
-        let data;
+        let data =[]; // Directly use json for calls data
+       
+        // Check the structure for each table
         if (currentTable === "key_assignment") {
             data = json.assigned_keys || [];
+        } else if (currentTable === "agents" || currentTable === "onboarding") {
+            data = json.data || []; // Use json.data for agents and onboarding
         } else {
-            data = json.data || [];
+            data = json || []; // Default for other tables
         }
-
         console.log(`Received ${data.length} records for ${currentTable}`, data);
 
         if (!data || data.length === 0) {
-            renderTable([]);
+            renderTable([]);  // Ensure the table is cleared when no data
             document.getElementById("filter-error").textContent = "No data found for selected table.";
             document.getElementById("filter-error").style.display = currentTable === "calls" ? "inline" : "none";
         } else {
-            document.getElementById("filter-error").style.display = "none";
+            document.getElementById("filter-error").style.display = "none";  // Hide error message when data is available
             renderTable(data);
         }
 
@@ -87,11 +88,12 @@ async function loadTableData() {
 
     } catch (error) {
         console.error(`Error loading ${currentTable} data:`, error);
-        renderTable([]);
+        renderTable([]);  // Clear table on error
         document.getElementById("filter-error").textContent = `Error: ${error.message}`;
         document.getElementById("filter-error").style.display = currentTable === "calls" ? "inline" : "none";
     }
 }
+
 
 
 
